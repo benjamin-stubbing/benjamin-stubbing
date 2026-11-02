@@ -1,0 +1,5 @@
+quarter,quarter_index,qoq_low_pct,qoq_central_pct,qoq_high_pct,status,source_id
+2025Q4,0,0,0,0,base,trendforce_1q26
+2026Q1,1,93,95.5,98,actual,trendforce_1q26
+2026Q2,2,58,60.5,63,actual,trendforce_2q26
+2026Q3,3,13,15.5,18,forecast,trendforce_3q26

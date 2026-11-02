@@ -1,0 +1,11 @@
+.Rproj.user/
+.Rhistory
+.RData
+.Ruserdata
+_output/
+report/*_files/
+report/*.html
+report/*.pdf
+report/*.md
+figures/*.png
+/.quarto/

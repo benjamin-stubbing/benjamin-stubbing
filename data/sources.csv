@@ -1,0 +1,29 @@
+source_id,claim,value,source,url,accessed,tier
+trendforce_1q26,Conventional DRAM contract prices QoQ 1Q26,+93% to +98%,TrendForce via press coverage,https://www.trendforce.com/presscenter/news/20260601-13070.html,2026-08-25,industry
+trendforce_2q26,Conventional DRAM contract prices QoQ 2Q26,+58% to +63%,TrendForce,https://www.trendforce.com/presscenter/news/20260331-12995.html,2026-08-25,industry
+trendforce_3q26,Server DRAM contract prices QoQ 3Q26 (forecast),+13% to +18%,TrendForce,https://www.trendforce.com/presscenter/news/20260709-13140.html,2026-08-25,industry
+ddr5_spot,DDR5 spot price per GB Sep-2025 to Dec-2025,US$6.84 to US$27.20,Trade press aggregation,https://tech-insider.org/ddr5-ram-prices-2026/,2026-08-25,weak
+gartner_pc,Combined DRAM+SSD prices to end-2026 and PC price effect,+130% cost; +17% PC prices vs 2025,Gartner via trade press,https://www.tomshardware.com/laptops/framework-warns-of-even-more-rising-ram-and-ssd-prices-through-2026-as-memory-crisis-persists-some-reprieve-as-prices-plateau-in-latest-monthly-update,2026-08-25,industry
+idc_counterpoint_asp,Smartphone average selling price 2026,+6.9% (Counterpoint) to +14% (IDC),IDC / Counterpoint via press,https://finance.yahoo.com/news/smartphone-market-set-biggest-ever-191934291.html,2026-08-25,industry
+idc_shipments,Smartphone shipments 2026,-14% (record decline),IDC,https://www.thenationalnews.com/future/technology/2026/08/23/smartphone-shipments-set-for-record-14-drop-in-2026-as-chip-costs-soar/,2026-08-25,industry
+budget_segment,Sub-US$100 smartphone sales; low-end BoM,-64% YoY sales; +20-30% BoM,Trade press,https://www.macobserver.com/news/rising-memory-costs-are-crushing-cheap-smartphone-sales-in-the-us/,2026-08-25,weak
+aws_price,AWS price increases 2026,+15% GPU (Jan); +20% EC2 Capacity Blocks (Jul),Trade press,https://www.computing.co.uk/news/2026/aws-increases-ai-cloud-compute-price,2026-08-25,industry
+cloud_budget,Enterprise cloud cost guidance 2026-27,+10% to +15%,Vendor/analyst commentary,https://www.softwareseni.com/how-much-will-your-cloud-bill-increase-in-2026-analysing-the-infrastructure-cost-passthrough/,2026-08-25,weak
+supply_relief,Timing of meaningful new DRAM supply,Not before 2H2027; material relief 2028,Samsung Q2-2026 call; Micron; TrendForce,https://www.tweaktown.com/news/112966/memory-shortages-will-get-only-worse-in-2027-and-2028-warns-samsung/index.html,2026-08-25,industry
+statsnz_cpi_jun26,NZ CPI June 2026 quarter,+4.1% annual; tradables +4.9%; non-tradables +3.4%,Stats NZ,https://www.stats.govt.nz/news/annual-inflation-at-4-1-percent-in-june-2026/,2026-08-25,official
+statsnz_cpi_mar26,NZ CPI March 2026 quarter,+3.1% annual,Stats NZ,https://www.stats.govt.nz/news/annual-inflation-at-3-1-percent-in-march-2026/,2026-08-25,official
+rbnz_mps_may26,Official Cash Rate held,2.25%,RBNZ Monetary Policy Statement May 2026,https://www.rbnz.govt.nz/monetary-policy/monetary-policy-statement/monetary-policy-statement-filtered-listing-page/2026/may-270/monetary-policy-statement-may-2026,2026-08-25,official
+rbnz_pta,Inflation target,1-3% band; 2% midpoint,RBNZ Remit,https://www.rbnz.govt.nz/,2026-08-25,official
+nz_imports_hs85,NZ imports of electrical/electronic equipment,~US$4.31bn (2024),Trade statistics aggregators,https://www.worldstopexports.com/new-zealands-top-10-imports/,2026-08-25,weak
+nz_imports_phones,NZ imports of phone devices,~US$1.3bn (2025),Trade statistics aggregators,https://www.worldstopexports.com/new-zealands-top-10-imports/,2026-08-25,weak
+nz_imports_machinery,NZ imports machinery incl. computers,~US$7bn (2025); 14.7% of imports,Trade statistics aggregators,https://www.worldstopexports.com/new-zealands-top-10-imports/,2026-08-25,weak
+aws_nz,AWS New Zealand region commitment,NZ$7.5bn; Auckland region live Sep 2025,AWS / press,https://www.datacenterdynamics.com/en/news/aws-names-first-customers-for-new-zealand-data-center-region/,2026-08-25,industry
+investnz_dc,Invest NZ data centre FDI target,NZ$25-30bn over five years,NZ Herald,https://www.nzherald.co.nz/business/crown-agency-pushes-for-30-billion-investment-in-new-data-centres/premium/B6X2KB63IFD4JE4J4JCFVACHXE/,2026-08-25,media
+msft_nz,Microsoft Auckland cloud region,Live Dec 2024; Whenuapai consent lapsed,Press,https://www.rnz.co.nz/news/political/571948/amazon-and-the-case-of-the-missing-new-zealand-data-centres,2026-08-25,media
+aws_cloud_pull,Memory shortage pushing workloads to cloud,Qualitative (AWS statement),The Register,https://www.theregister.com/2026/04/30/server_memory_shortage_pushing_you/,2026-08-25,industry
+cpi_weight_assumption,NZ CPI weights for device categories,Assumed 0.5-0.7% each,AUTHOR ASSUMPTION - not sourced,NA,2026-08-25,assumption
+petrol_weight_assumption,NZ CPI weight for petrol,Assumed 3.3%,AUTHOR ASSUMPTION - not sourced,NA,2026-08-25,assumption
+passthrough_assumption,Share of landed cost increase reaching shelves within a year,Assumed 50-90% (central 70%),AUTHOR ASSUMPTION - inventory bought forward,NA,2026-11-02,assumption
+nz_gdp_assumption,NZ nominal GDP,Assumed NZ$440bn,AUTHOR ASSUMPTION - order of magnitude,NA,2026-08-25,assumption
+author_judgement,Audio-visual equipment shock size,Assumed +4% to +12%,AUTHOR ASSUMPTION - lower memory intensity than PCs,NA,2026-08-25,assumption
+exposure_base_assumption,NZ spend bases by channel,See exposure_channels.csv,AUTHOR ASSUMPTION - scaled from import aggregates,NA,2026-08-25,assumption

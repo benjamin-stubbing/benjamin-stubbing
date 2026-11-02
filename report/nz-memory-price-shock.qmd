@@ -1,0 +1,569 @@
+---
+title: "The Memory Price Shock and New Zealand"
+subtitle: "A short note on transmission channels and orders of magnitude"
+date: 2026-11-02
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    number-sections: true
+    embed-resources: true
+    theme: cosmo
+    fig-width: 7
+    fig-height: 4.2
+  pdf:
+    toc: true
+    number-sections: true
+    fig-width: 6.5
+    fig-height: 4
+execute:
+  echo: false
+  warning: false
+  message: false
+knitr:
+  opts_chunk:
+    dev: png
+    dpi: 160
+---
+
+```{r setup}
+root <- if (dir.exists("R")) "." else ".."
+source(file.path(root, "R/params.R"))
+source(file.path(root, "R/theme.R"))
+source(file.path(root, "R/data.R"))
+source(file.path(root, "R/calcs.R"))
+
+suppressPackageStartupMessages({
+  library(dplyr); library(tidyr); library(ggplot2); library(scales); library(knitr)
+})
+
+d        <- load_all_data()
+dram_ix  <- dram_index(d$dram)
+contribs <- cpi_contributions(d$categories)
+timing   <- cpi_timing(contribs, params)
+costs    <- channel_costs(d$exposure, params)
+sens     <- cpi_sensitivity(params)
+
+# Pull a low/central/high value out of the timing table.
+tm <- function(period_prefix, which) {
+  timing[[which]][startsWith(timing$period, period_prefix)]
+}
+f1 <- function(x) sprintf("%.1f", x)
+f2 <- function(x) sprintf("%.2f", x)
+
+tot_lo <- tm("Total", "low"); tot_c <- tm("Total", "central"); tot_hi <- tm("Total", "high")
+y26_lo <- tm("2026", "low");  y26_c <- tm("2026", "central");  y26_hi <- tm("2026", "high")
+y27_lo <- tm("2027", "low");  y27_c <- tm("2027", "central");  y27_hi <- tm("2027", "high")
+
+pt_low     <- params$passthrough_year1[["low"]]
+pt_central <- params$passthrough_year1[["central"]]
+pt_high    <- params$passthrough_year1[["high"]]
+
+fuel_pp      <- fuel_benchmark(params)
+fuel_ratio26 <- y26_c / fuel_pp
+
+total_cost_low     <- sum(costs$cost_low)
+total_cost_central <- sum(costs$cost_central)
+total_cost_high    <- sum(costs$cost_high)
+total_cost_gdp_pct <- total_cost_central / params$nz_gdp_nzd_bn * 100
+
+peak_index <- dram_ix %>% filter(quarter_index == max(quarter_index))
+
+cpi_now <- d$macro$value[d$macro$indicator == "Headline CPI inflation (annual)" &
+                         d$macro$period == "2026Q2"]
+ocr_now <- d$macro$value[d$macro$indicator == "Official Cash Rate"]
+
+# The central case, snapped to the nearest gridline so it sits on a tile.
+central_weight_pct <- params$weight_grid[
+  which.min(abs(params$weight_grid - sum(contribs$cpi_weight_pct)))]
+central_swing_pp <- params$swing_grid[
+  which.min(abs(params$swing_grid - tot_c / (sum(contribs$cpi_weight_pct) / 100)))]
+```
+
+::: {.callout-important}
+## The verdict on inflation
+
+The memory shock adds about **`r f1(tot_c)` percentage points** to New Zealand's
+consumer price level in total (range `r f2(tot_lo)`–`r f2(tot_hi)`). Roughly
+**`r f1(y26_c)`pp** of that shows up in annual inflation in 2026 and roughly
+**`r f1(y27_c)`pp** in 2027, because retailers sell stock bought months earlier.
+That is too small to threaten the inflation target, and the Reserve Bank should
+look through it. It matters only because it lands on top of a fuel shock that has
+already pushed inflation to `r cpi_now`%. From 2028 the risk reverses: if memory
+prices crash, as they have at the end of every previous cycle, the effect turns
+into a drag.
+:::
+
+## In one page {.unnumbered}
+
+Global memory prices have roughly **`r f1(peak_index$index_central/100)`x-ed
+since the end of 2025** (range `r f1(peak_index$index_low/100)`x to
+`r f1(peak_index$index_high/100)`x). New Zealand produces no memory, so the entire
+shock arrives as an import price. Four things follow.
+
+1. **Inflation: small, temporary in its rate, and badly timed.** About
+   `r f1(tot_c)`pp on the price level in total, of which roughly `r f2(y26_c)`pp
+   lands in 2026 annual inflation (range `r f2(y26_lo)`–`r f2(y26_hi)`). Fuel is
+   currently contributing about `r f1(fuel_pp)`pp, so the memory shock's 2026
+   effect is around `r sprintf("%.0f%%", fuel_ratio26*100)` of the fuel effect.
+
+2. **Income: a transfer offshore of roughly `r sprintf("NZ$%.1fbn", total_cost_central)` a year**
+   (`r f1(total_cost_low)`–`r f1(total_cost_high)`), or about
+   **`r sprintf("%.1f%%", total_cost_gdp_pct)` of GDP**. Small. Real. Entirely
+   one-way: unlike a dairy price move, there is no New Zealand sector on the
+   winning side.
+
+3. **Investment: the important one.** ICT capital has had a *falling* price for
+   thirty years. That is a large part of why capital deepening happened at all in a
+   country that invests badly. The deflator has now flipped sign. Nothing in the
+   inflation number captures this, and it is the channel most likely to still matter
+   in 2030.
+
+4. **Distribution: regressive by construction.** The memory-intensive share of a
+   device's bill of materials is highest at the bottom of the range. Cheap phones
+   and school laptops absorbed the largest proportional hit.
+
+The shock lands on an economy where annual inflation is already **`r cpi_now`%**
+and the OCR is **`r ocr_now`%**. That context does more work in this note than
+any of the memory numbers.
+
+::: {.callout-note}
+## What this note is, and is not
+
+This is a framework note with orders of magnitude attached, written to be
+checkable rather than precise. There is no econometrics in it, deliberately: the
+underlying price series has four quarterly observations and there is no New
+Zealand micro data on device prices in the public domain. A regression on that
+would be a decoration, not a finding.
+
+Every number is either sourced in @sec-sources or declared an assumption in
+`R/params.R`. Where a number is an assumption, it carries a range, and the range
+is wide. Several of the New Zealand quantities — CPI basket weights for device
+categories, spend bases by channel — are **estimates the author could not verify
+against Stats NZ directly** and should be replaced with the published series
+before this note is used for anything consequential. @sec-falsify says what
+would change the conclusions.
+
+**Data are as at 25 August 2026.** The September 2026 quarter CPI, released
+since, is not incorporated; its computing equipment sub-index is the first direct
+test of the estimates here.
+:::
+
+## The shock itself
+
+Memory is not behaving like a component price. It is behaving like a commodity in
+a squeeze, because that is what it has become: three suppliers, capacity
+reallocated to high-bandwidth memory for AI accelerators, and a demand curve that
+for hyperscalers is close to vertical.
+
+```{r fig-dram}
+#| label: fig-dram
+#| fig-cap: "Conventional DRAM contract prices, quarter-on-quarter. The 2026Q3 figure is a forecast."
+
+ggplot(d$dram %>% filter(quarter_index > 0),
+       aes(x = quarter, y = qoq_central_pct, fill = status)) +
+  geom_col(width = 0.6) +
+  geom_errorbar(aes(ymin = qoq_low_pct, ymax = qoq_high_pct),
+                width = 0.15, colour = pal[["neutral"]]) +
+  geom_text(aes(label = sprintf("+%.0f%%", qoq_central_pct)),
+            vjust = -1.6, size = 3.4, colour = pal[["neutral"]]) +
+  scale_fill_manual(values = c(actual = pal[["actual"]], forecast = pal[["forecast"]])) +
+  scale_y_continuous(labels = label_percent(scale = 1), expand = expansion(mult = c(0, 0.18))) +
+  labs(title = "Three quarters that repriced a commodity input",
+       subtitle = "Quarter-on-quarter change in conventional DRAM contract prices",
+       x = NULL, y = "QoQ change",
+       caption = wrap_cap(paste("Source: TrendForce, via trade press.",
+                                "Bars show the central estimate; whiskers show the reported range."))) +
+  theme_note()
+```
+
+The quarterly rates are decelerating, which is being read in some coverage as the
+shock ending. It is not. Decelerating growth in a price level is still a rising
+price level, and the compounding is what matters:
+
+```{r fig-index}
+#| label: fig-index
+#| fig-cap: "Cumulative DRAM contract price level, 2025Q4 = 100."
+
+ggplot(dram_ix, aes(x = quarter_index, y = index_central)) +
+  geom_ribbon(aes(ymin = index_low, ymax = index_high),
+              fill = pal[["light"]], alpha = 0.8) +
+  geom_line(colour = pal[["actual"]], linewidth = 1) +
+  geom_point(colour = pal[["actual"]], size = 2.4) +
+  geom_hline(yintercept = 100, linetype = "dashed", colour = pal[["neutral"]]) +
+  geom_text(aes(label = sprintf("%.0f", index_central)),
+            vjust = -1.1, hjust = 1.15, size = 3.4, colour = pal[["neutral"]]) +
+  scale_x_continuous(breaks = dram_ix$quarter_index, labels = dram_ix$quarter) +
+  scale_y_continuous(limits = c(0, NA), expand = expansion(mult = c(0, 0.12))) +
+  labs(title = "The deceleration is not a reversal",
+       subtitle = "Cumulative contract price index, 2025Q4 = 100. Shaded band is the reported range.",
+       x = NULL, y = "Index",
+       caption = wrap_cap(paste("Derived by compounding the quarterly changes in Figure 1.",
+                                "Compounding a range widens it fast: treat the endpoint as an order of magnitude."))) +
+  theme_note()
+```
+
+Two features of this shock matter more for New Zealand than its size.
+
+**It is long.** Samsung told its second-quarter 2026 call that incremental supply
+is unlikely before 2028 and that constraints tighten in 2027. Micron puts
+meaningful output from new US and Singapore capacity at mid-2027 at the earliest.
+A shock that resolves in two quarters is noise; a shock that resolves in eight is
+a planning parameter.
+
+**It is bimodal.** Memory is the most reliably cyclical market in manufacturing,
+and every previous squeeze has ended in a glut. The distribution of 2028 outcomes
+is not a bell curve around today's price — it is a spike at "still tight" and a
+spike at "collapsed", with not much in between. Anyone presenting a single
+central path for memory prices in 2028, this note included, is presenting the
+mean of a distribution with no mass at the mean. Plan for both tails.
+
+## Five channels into New Zealand
+
+New Zealand's exposure is simple to characterise because the country's position
+is simple: a small, distant, wholly import-dependent consumer of a good whose
+price is set elsewhere, with no offsetting export interest. Taiwan and Korea are
+experiencing this as a terms-of-trade boom. New Zealand is on the other side of
+that trade with nothing to hedge it.
+
+### Channel 1: consumer prices
+
+The calculation has two steps: how much the shock adds to the price level in
+total, and when that shows up in annual inflation.
+
+**Step 1: the total.** A category's contribution is its CPI weight times its
+price swing.
+
+```{r tbl-contrib}
+#| label: tbl-contrib
+contribs %>%
+  transmute(
+    Category = category,
+    `CPI weight (%)` = sprintf("%.1f", cpi_weight_pct),
+    `Trend (%/yr)` = sprintf("%+.0f", trend_annual_pct),
+    `Under shock (%/yr)` = sprintf("%+.0f", shock_annual_central_pct),
+    `Swing (pp)` = sprintf("%.0f", swing_central),
+    `Contribution (pp)` = sprintf("%.2f", contrib_central)
+  ) %>%
+  bind_rows(tibble(
+    Category = "**Total**",
+    `CPI weight (%)` = sprintf("%.1f", sum(contribs$cpi_weight_pct)),
+    `Trend (%/yr)` = "", `Under shock (%/yr)` = "", `Swing (pp)` = "",
+    `Contribution (pp)` = sprintf("**%.2f**", tot_c)
+  )) %>%
+  kable(align = "lrrrrr",
+        caption = "Total contribution to the CPI price level once fully passed through, central case. Weights are author estimates, not Stats NZ published weights.")
+```
+
+The **swing** is the honest way to frame this, and it is why the number is larger
+than it looks. Computing equipment has not been a source of inflation in living
+memory; it has been a quiet, persistent source of *dis*inflation, running perhaps
+3–5% below zero every year on a quality-adjusted basis. Gartner's estimate of a
+17% rise in PC prices in 2026 is therefore not a 17-point event in the index. It
+is a **21-point** event, because the counterfactual was negative. The same logic
+applies, more weakly, to phones and audio-visual gear.
+
+**Step 2: the timing.** New Zealand retail sells inventory bought forward, often
+two or three quarters ahead. This note assumes
+`r sprintf("%.0f%%", pt_central*100)` of the cost increase reaches shelves in the
+first year (range `r sprintf("%.0f%%", pt_low*100)`–`r sprintf("%.0f%%", pt_high*100)`)
+and the rest the year after:
+
+```{r tbl-timing}
+#| label: tbl-timing
+timing %>%
+  transmute(
+    ` ` = period,
+    `Central (pp)` = f2(central),
+    `Range (pp)` = paste(f2(low), "to", f2(high))
+  ) %>%
+  kable(align = "lrr",
+        caption = "When the shock shows up. The 2026 and 2027 rows always sum to the total, so their ranges move in opposite directions and should not be added together.")
+```
+
+So the number to quote for any single year's inflation is about
+**`r f1(y26_c)`pp in 2026**, not the `r f1(tot_c)`pp total. Two caveats on the
+2027 row. It covers only the spill-over from the 2026 repricing; if memory prices
+keep rising through 2027, as suppliers are guiding, 2027 carries a fresh increment
+on top. And it would be visible but never dramatic in any single quarterly print.
+
+The **weight** is where this note is most exposed. New Zealand's published CPI
+expenditure weights for these categories were not accessible when this was
+written, and the figures in @tbl-contrib are estimates from comparable
+advanced-economy baskets. So rather than defend a point estimate, here is the
+whole parameter space for the total:
+
+```{r fig-sens}
+#| label: fig-sens
+#| fig-cap: "Total CPI contribution across the plausible parameter space. The marked point is this note's central case."
+
+ggplot(sens, aes(x = swing_pp, y = weight_pct, fill = contribution_pp)) +
+  geom_tile(colour = "white", linewidth = 0.4) +
+  geom_text(aes(label = sprintf("%.2f", contribution_pp)), size = 2.6, colour = "grey20") +
+  annotate("point", x = central_swing_pp, y = central_weight_pct,
+           shape = 21, size = 7, stroke = 1.4, colour = pal[["accent"]], fill = NA) +
+  scale_fill_gradient(low = "white", high = pal[["forecast"]], guide = "none") +
+  scale_x_continuous(breaks = params$swing_grid) +
+  scale_y_continuous(breaks = params$weight_grid, labels = label_number(accuracy = 0.1)) +
+  labs(title = "The answer is small across the whole parameter space",
+       subtitle = "Total contribution to the CPI price level, 2026 and 2027 combined (percentage points)",
+       x = "Average price swing vs trend (percentage points)",
+       y = "Total CPI weight of affected categories (%)",
+       caption = wrap_cap(paste("Read this as the range of defensible answers, not as a probability surface.",
+                                "Even the top-right corner is under 0.7pp, and that is spread over two years."))) +
+  theme_note() +
+  theme(panel.grid = element_blank())
+```
+
+This is the most useful thing in the note. It says that **no reasonable choice of
+parameters makes the memory shock a first-order inflation event for New Zealand.**
+Even the extreme corner of the grid is under 0.7pp in total, and pass-through
+spreads that across two years. If someone tells you memory prices are going to
+derail the inflation target on their own, they are wrong on the arithmetic, and
+the arithmetic is not hard.
+
+Two further qualifications.
+
+**Measured CPI will understate the welfare loss.** The dominant manufacturer
+response to a component cost spike is not a price rise but a specification cut:
+the same laptop at the same price with 8GB instead of 16GB. Statistics New
+Zealand quality-adjusts this category, so in principle a spec cut is recorded as
+a price increase. In practice, hedonic models fitted over two decades of falling
+memory prices are being asked to extrapolate in a direction the training period
+never contained. The bias is one-directional: the figures above are what CPI is
+likely to *show*, and the cost-of-living hit households experience is somewhat
+larger, by an amount this note does not estimate.
+
+**The exchange rate can swamp all of this.** Every item here is USD-priced. A 10%
+move in NZD/USD is worth more to landed device costs than a full quarter of DRAM
+contract inflation. Any forecast of New Zealand device prices is mostly a currency
+forecast wearing a semiconductor costume.
+
+### Channel 2: the import bill
+
+```{r fig-channels}
+#| label: fig-channels
+#| fig-cap: "Estimated annual cost by channel, before behavioural response."
+#| fig-height: 3.4
+
+costs %>%
+  mutate(channel = factor(channel, levels = rev(channel))) %>%
+  ggplot(aes(y = channel, x = cost_central)) +
+  geom_segment(aes(x = cost_low, xend = cost_high, yend = channel),
+               colour = pal[["light"]], linewidth = 5, lineend = "round") +
+  geom_point(colour = pal[["actual"]], size = 3.6) +
+  geom_text(aes(x = cost_high, label = sprintf("$%.2fbn", cost_central)),
+            hjust = -0.35, size = 3.2, colour = pal[["neutral"]]) +
+  scale_x_continuous(labels = label_dollar(prefix = "NZ$", suffix = "bn"),
+                     limits = c(0, NA), expand = expansion(mult = c(0.01, 0.30))) +
+  scale_y_discrete(labels = function(x) gsub(" \\(", "\n(", x)) +
+  labs(title = "Where the money goes",
+       subtitle = "Additional annual cost at steady state, NZ$ billion",
+       x = NULL, y = NULL,
+       caption = wrap_cap(paste(
+         "Grey bars show the low-high range; the dot is the central case.",
+         "Spend bases are author estimates scaled from trade aggregates.",
+         "Confidence is 'low' for the cloud and public sector lines."))) +
+  theme_note() +
+  theme(axis.text.y = element_text(hjust = 1, size = 9))
+```
+
+Roughly **`r sprintf("NZ$%.1fbn", total_cost_central)` a year**, or
+`r sprintf("%.1f%%", total_cost_gdp_pct)` of GDP, at steady state and before
+anyone changes their behaviour. For scale: a 20% swing in dairy export prices
+moves national income by something closer to NZ$5bn on a roughly NZ$25bn export
+base. The memory shock is a fraction of a bad dairy season. It is not a
+macroeconomic event.
+
+Two framings are worth keeping distinct, because they get confused constantly.
+The **import bill** will rise by less than this, because people will buy fewer and
+cheaper devices — quantity adjusts. The **welfare loss** is close to the full
+figure regardless, because it shows up as the devices not bought and the
+capability not acquired. If you are watching the trade balance you will
+under-read this shock; the adjustment hides in volumes.
+
+### Channel 3: the price of capital deepening {#sec-capital}
+
+This is the channel that deserves the attention it will not get.
+
+For thirty years, ICT has been the only major capital good with a persistently
+negative deflator. That single fact does an enormous amount of work in growth
+accounting: it is why firms in low-investment economies nonetheless accumulated
+computing capital, because the same nominal budget bought more real capital every
+year without anyone deciding anything. New Zealand, which invests poorly by the
+standards of its peers and has had flat measured labour productivity for years,
+has been a quiet beneficiary of that automatic deepening.
+
+The deflator has flipped. A firm with a fixed nominal IT budget now buys *less*
+real capital each year, not more. The mechanical response — already visible in
+enterprise purchasing — is to extend refresh cycles: four years to five, five to
+six. That looks like prudent cost management on any one balance sheet. In
+aggregate it is a reduction in the rate of capital deepening, and it will show up
+in productivity statistics with a lag long enough that nobody will attribute it
+correctly.
+
+The size is not knowable from public data, and this note does not pretend to
+estimate it. The point is structural: **a 15% rise in the price of ICT capital is
+a larger event for New Zealand's growth path than a 0.2pp rise in annual CPI, and
+only one of them will be discussed.**
+
+### Channel 4: cloud and the data centre pipeline
+
+New Zealand is a net importer of cloud. Microsoft's Auckland region opened in
+December 2024; AWS committed NZ$7.5bn and went live in September 2025; Invest New
+Zealand is chasing NZ$25–30bn of data centre investment over five years. None of
+that changes the direction of the trade — hosting capacity being physically here
+does not make the compute domestically produced.
+
+So the cloud channel is close to unambiguous. AWS raised GPU instance prices 15%
+in January 2026, the first increase in the company's history, and lifted EC2
+Capacity Blocks around 20% in July. Analyst guidance to enterprises is to budget
+10–15% cloud cost growth through 2026–27 on cost pass-through alone. Every one of
+those points is imported inflation for a New Zealand buyer, and the effect is
+larger for memory-intensive services — databases, caching, analytics — than for
+general compute. If you run a New Zealand SaaS business, your COGS line is the
+place this shock will find you first.
+
+The **build side** is genuinely ambiguous, and should be presented that way.
+Memory inflation raises capex per megawatt substantially for AI-configured
+capacity, which pushes marginal projects out — and New Zealand is a marginal
+region on almost every dimension that matters: small domestic demand, long
+latency to everywhere, no cost advantage in power. There is already evidence of
+projects being reconsidered: Microsoft let an Overseas Investment Office consent
+lapse at Whenuapai, and AWS wrote off NZ$44.9m on an abandoned Westgate site.
+Neither is attributable to memory prices, and it would be sloppy to claim
+otherwise. But the same cost pressure also pushes workloads *out* of on-premise
+and into cloud — AWS has said as much — which raises utilisation of capacity
+already built. Whether New Zealand nets out ahead depends on which effect
+dominates, and nothing in the public data resolves it.
+
+The honest forward indicator is not a price series. It is the consent register:
+watch whether OIO applications for data centre sites are lodged, extended, or
+allowed to lapse over the next four quarters.
+
+### Channel 5: fiscal and distributional
+
+**Fiscal.** Government IT budgets are set in nominal terms against fixed
+baselines. A 10–15% increase in cloud contract costs and a similar rise in device
+fleet replacement is, arithmetically, a real cut to whatever else those agencies
+buy. Health, education and justice all run large device fleets on multi-year
+refresh cycles, and several of those cycles fall due inside the shock window. The
+risk is not a headline fiscal number; it is a set of deferred refreshes that
+convert into service quality and security exposure two or three years out.
+
+**Distributional.** The incidence is regressive, and unusually clearly so.
+Memory is a larger share of the bill of materials at the bottom of the device
+range than at the top, so the proportional cost increase is largest for the
+cheapest goods: reported production cost increases of 20–30% for sub-US$200
+phones against 10–15% for mid and high-end devices. Globally, sales of
+sub-US$100 phones fell 64% year on year, with some manufacturers withdrawing from
+the segment. For New Zealand this reads directly onto digital inclusion — the
+entry-level device is the one that got repriced hardest, and household connection
+and device access are already the binding constraint for the households furthest
+from the digital economy. Any programme with a device-provision component should
+be re-costed now rather than discovering the gap at procurement.
+
+## What it means for monetary policy
+
+The verdict at the top of this note in one line: **small, look through it, but
+mind the company it keeps.** The rest of this section explains the last clause.
+
+The textbook answer is easy and correct as far as it goes: this is a **relative
+price shock, not an inflation shock**. It raises the price of one category of
+goods against everything else. A flexible inflation targeter should look through
+the first-round effect and respond only if inflation expectations move. Nothing
+in @fig-sens argues otherwise; the numbers are simply too small.
+
+The complication is context, not size. Annual inflation was `r cpi_now`% in the
+June 2026 quarter, above the 1–3% band, driven overwhelmingly by fuel. The OCR
+sits at `r ocr_now`%. The Reserve Bank is already looking through one supply
+shock. The relevant question is not "how large is the memory shock" — it is
+small — but "**how many simultaneous look-throughs does a central bank get before
+the public stops distinguishing between a relative price shock and
+inflation?**" That is a question about credibility, not arithmetic. It is why a
+shock worth about `r f1(y26_c)`pp a year deserves a sentence in 2026 monetary
+policy communication when the same shock in 2019 would not have.
+
+Three further observations.
+
+**Its persistence cuts both ways.** Unlike an oil spike, this does not mean-revert
+on a known schedule; supply relief is not expected before 2028. A shock that
+delivers a small positive contribution for eight consecutive quarters is harder to
+communicate as transitory than one large quarter that visibly unwinds — even
+though, in strict terms, a slow level shift is exactly what a central bank should
+ignore.
+
+**It arrives in tradables, where the Bank has least traction.** June 2026
+tradables inflation was 4.9% against non-tradables at 3.4%. Tightening domestic
+conditions to offset an imported component price is a poor trade; the memory
+shock is best treated as a level shift in the tradables series to be looked
+through, not leaned against.
+
+**The tail risk is disinflationary.** If 2027–28 capacity lands into softening AI
+demand, memory prices do not gently normalise — they collapse, and the device
+deflation resumes with force. The risk to a 2028 inflation forecast built on
+today's memory prices is meaningfully skewed to the downside. This is the least
+discussed and most likely-to-embarrass feature of the whole episode.
+
+## What would change these conclusions {#sec-falsify}
+
+Stating this properly is the price of publishing estimates built on assumptions.
+
+| If this turned out to be true | Then |
+|---|---|
+| Published Stats NZ weights for these categories are materially above ~2.6% of the basket | The CPI contribution rises above the grid in @fig-sens; re-run with real weights |
+| The September 2026 quarter computing equipment index is still falling | Pass-through is slower or smaller than assumed; the 2026 figure is too high |
+| NZD/USD falls 15%+ | The currency effect dominates the memory effect entirely; this note becomes a footnote to an exchange rate story |
+| Memory prices fall QoQ in any quarter before 2027Q2 | The squeeze is breaking early; treat the whole thing as a completed cycle and expect resumed deflation |
+| Hedonic adjustment is found to be absorbing spec cuts fully | The measured-vs-experienced gap in Channel 1 disappears and CPI is the right measure after all |
+| Data centre OIO consents lapse or are withdrawn over the next four quarters | Channel 4 resolves negative for New Zealand; the build-side ambiguity closes the wrong way |
+| Enterprise refresh cycles are observed lengthening in survey data | Channel 3 is confirmed and becomes the main story; escalate it accordingly |
+
+The single most valuable thing anyone could do to improve this note costs about
+an hour: pull the actual CPI expenditure weights and the computing equipment
+sub-index (including the September 2026 quarter) from Stats NZ Infoshare and
+replace the estimates in `data/consumer_categories.csv`. Everything downstream
+recalculates.
+
+## Provenance {#sec-sources}
+
+Every input, with its tier. Nothing in this note is sourced to a number that does
+not appear below. URLs and access dates are in `data/sources.csv`.
+
+```{r tbl-sources}
+#| label: tbl-sources
+d$sources %>%
+  mutate(tier = factor(tier, levels = source_tiers)) %>%
+  arrange(tier, source_id) %>%
+  transmute(
+    Tier = as.character(tier),
+    Claim = claim,
+    Value = value,
+    Source = source
+  ) %>%
+  kable(caption = "Input provenance. 'assumption' means the author chose it within a declared range; 'weak' means a secondary aggregator that was not independently verified.")
+```
+
+**Tiers.** *official* — national statistical agency or central bank.
+*industry* — named analyst house (TrendForce, Gartner, IDC, Counterpoint) or
+company statement, reached via trade press rather than the primary document.
+*media* — reported, single source. *weak* — trade aggregator or secondary
+compilation, not independently verified. *assumption* — the author's, with a
+range, documented in `R/params.R`.
+
+**A note on access.** Stats NZ, Trading Economics, OEC and CRAN were all
+unreachable from the environment this was written in. Official New Zealand
+figures here come from search-indexed summaries of Stats NZ and RBNZ releases
+rather than from the releases themselves, and the trade aggregates are secondary.
+That is a real limitation and is why the New Zealand-specific quantities carry
+the widest ranges in the note.
+
+**Revision history.** First drafted 25 August 2026. Revised 2 November 2026: the
+pass-through assumption, previously stated in the text but not applied, now
+drives a 2026/2027 split of the CPI effect; the verdict is stated once, up front.
+
+```{r session}
+#| results: asis
+cat("\n---\n\nBuilt with R ", R.version$major, ".", R.version$minor,
+    " on ", format(Sys.Date()), ".\n", sep = "")
+```
