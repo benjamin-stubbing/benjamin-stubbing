@@ -1,4 +1,0 @@
-category,cpi_weight_pct,trend_annual_pct,shock_annual_low_pct,shock_annual_central_pct,shock_annual_high_pct,weight_source_id,shock_source_id
-Computing equipment,0.6,-4,10,17,22,cpi_weight_assumption,gartner_pc
-Telecommunication equipment,0.5,-3,7,10,14,cpi_weight_assumption,idc_counterpoint_asp
-Audio-visual equipment,0.7,-4,4,8,12,cpi_weight_assumption,author_judgement

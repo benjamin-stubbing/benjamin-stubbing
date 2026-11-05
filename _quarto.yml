@@ -1,8 +1,0 @@
-project:
-  type: default
-  output-dir: _output
-  render:
-    - report/nz-memory-price-shock.qmd
-
-execute:
-  freeze: false
